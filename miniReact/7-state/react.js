@@ -1,99 +1,90 @@
-let rootDOMElement, rootReactElement;
-const REACT_CLASS = 'REACT_CLASS';
 
+  let rootDOMElement, rootReactElement;
+  const REACT_CLASS = 'REACT_CLASS';
 
-function anElement(element, props, children) {
-  //判断是否class组件
-  if (isClass(element)) {
-    return handleClass(element, props,children);
-    //判断是否function组件
-  } else if (isStateLessComponent(element)) {
-    return element(props);
-  } else {
-    return handleHtmlElement(element, props, children);
+  function anElement(element, props, children) {
+    if (isClass(element)) {
+      return handleClass(element, props, children);
+    } else if (isStateLessComponent(element)) {
+      return element(props);
+    } else {
+      return handleHtmlElement(element, props, children);
+    }
   }
-}
 
-function handleClass(clazz, props,children) {
-  //class 新创建一个实例 执行 render方法
-  console.log("TCL: handleClass -> props", props,children);
-  const reactElement = new clazz(props);
-  reactElement.children = children;
-  reactElement.type = REACT_CLASS;
-  return reactElement.render();
-}
-
-function handleHtmlElement(element, props, children) {
-  const anElement = document.createElement(element);
-  children.forEach(child => appendChild(anElement, child));
-  _.forEach(props, (value, name) => appendProp(anElement, name, value));
-  return anElement;
-}
-
-function appendChild(element, child) {
-  if (child.type === REACT_CLASS) {
-    //递归
-    appendChild(element, child.render());
-  } else if (Array.isArray(child)) {
-    //child是数组则继续遍历 html元素
-    child.forEach(ch => appendChild(element, ch));
-  } else if (typeof(child) === 'object') {
-    element.appendChild(child);
-  } else {
-    element.innerHTML += child;
+  function createElement(el, props, ...children) {
+    return anElement(el, props, children);
   }
-}
 
-function appendProp(element, propName, propVal) {
-  if (shouldAddEventListener(propName)) {
-    element.addEventListener(propName.substring(2).toLowerCase(), propVal);
-  } else {
-    element.setAttribute(propName, propVal);
+  function handleClass(clazz, props, children) {
+    const reactElement = new clazz(props);
+    reactElement.children = children;
+    reactElement.type = REACT_CLASS;
+    return reactElement;
   }
-}
 
-//使用class状态组件传props
-class Component {
-  constructor(props) {
-    this.props = props;
+  function handleHtmlElement(element, props, children) {
+    const anElement = document.createElement(element);
+    children.forEach(child => appendChild(anElement, child));
+    _.forEach(props, (value, name) => appendProp(anElement, name, value));
+    return anElement;
   }
-  //state方法
-  setState(state) {
-  console.log("TCL: Component -> setState -> state", state)
-    
-    this.state = Object.assign({}, this.state, state);
-    reRender();
+
+  function appendChild(element, child) {
+    if (child.type === REACT_CLASS) {
+      appendChild(element, child.render());
+    } else if (Array.isArray(child)) {
+      child.forEach(ch => appendChild(element, ch));
+    } else if (typeof(child) === 'object') {
+      element.appendChild(child);
+    } else {
+      element.innerHTML += child;
+    }
   }
-}
 
+  function appendProp(element, propName, propVal) {
+    if (shouldAddEventListener(propName)) {
+      element.addEventListener(propName.substring(2).toLowerCase(), propVal);
+    } else { element.setAttribute(propName, propVal);
+    }
+  }
 
-function reRender() {
+  class Component {
+    constructor(props) {
+      this.props = props;
+    }
 
-  console.log('%c⧭', 'color: #00e600', rootDOMElement);
-  while (rootDOMElement.hasChildNodes()) {
+    setState(state) {
+      this.state = Object.assign({}, this.state, state);
+      reRender();
+    }
+  }
+
+  function reRender() {
+    //删除整个dom树结构
+    while (rootDOMElement.hasChildNodes()) {
+
+      
+      rootDOMElement.removeChild(rootDOMElement.lastChild);
+    }
     console.log("TCL: reRender -> rootDOMElement.hasChildNodes()", rootDOMElement.hasChildNodes())
-    console.log("TCL: reRender -> rootDOMElement.lastChild", rootDOMElement.lastChild)
-    rootDOMElement.removeChild(rootDOMElement.lastChild);
-   
+    //重新渲染节点
+    ReactDOM.render(rootReactElement, rootDOMElement);
   }
-  //删除全部节点,重新渲染
-  ReactDOM.render(rootReactElement, rootDOMElement);
-}
 
-function createElement(el, props, ...children) {
-  return anElement(el, props, children);
-}
-
-window.React = {
-  createElement,
-  Component
-};
-
-window.ReactDOM = {
-  render: (el, domEl) => {
-    rootReactElement = el;
-    rootDOMElement = domEl;
-    const currentDOM = rootReactElement.render();
-    rootDOMElement.appendChild(currentDOM);
-  }
-};
+  window.React = {
+    createElement,
+    Component
+  };
+  window.ReactDOM = {
+    render: (el, domEl) => {
+      rootReactElement = el;
+      console.log("TCL: rootReactElement", rootReactElement)
+      rootDOMElement = domEl;
+      console.log("TCL: rootDOMElement", rootDOMElement)
+      
+      const currentDOM = rootReactElement.render();
+      console.log("TCL: rootReactElement.render()", rootReactElement.render())
+      rootDOMElement.appendChild(currentDOM);
+    }
+  };
