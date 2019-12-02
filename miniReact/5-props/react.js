@@ -1,20 +1,23 @@
 
-function anElement(element,children){
+function anElement(element,props,children){
     //判断是否class组件
     if(isClass(element)){
-      return handleClass(element);
+      return handleClass(element,props);
       //判断是否function组件
     }else if (isStateLessComponent(element)) {
-      return element();
+      return element(props);
     }else{
       return handleHtmlElement(element, children);
     }
 }
 
 
-function handleClass(clazz) {
+function handleClass(clazz,props) {
   //class 新创建一个实例 执行 render方法
-  const component = new clazz();
+  console.log("TCL: handleClass -> props", props)
+  const component = new clazz(props);
+ 
+  
   return component.render();
 }
 
@@ -32,15 +35,22 @@ function handleHtmlElement(element, children) {
   return anElement;
 }
 
+//使用class状态组件传props
+class Component {
+  constructor(props) {
+    this.props = props;
+  }
+}
 
-function createElement(el,props,...children){
-console.log("TCL: createElement -> children", children)
-  return anElement(el, children);
+
+function createElement(el, props, ...children) {
+  return anElement(el, props, children);
 }
 
 
 window.React = {
-   createElement
+   createElement,
+   Component
 }
 
 window.ReactDOM = {
